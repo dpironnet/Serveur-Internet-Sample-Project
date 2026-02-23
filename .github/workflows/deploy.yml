@@ -18,30 +18,29 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          script: |
+         script: |
             cd /root
-            
-            # 1. Nettoyage de sécurité si un vieux dossier existe
             rm -rf temp_repo
             
-            # 2. Clonage du répertoire avec le token
             echo "Clonage du dépôt..."
             git clone https://${{ secrets.GH_TOKEN }}@github.com/VOTRE_UTILISATEUR/VOTRE_DEPOT.git temp_repo
             
-            # 3. Création du dossier de destination (si absent)
             mkdir -p /root/srv
-            
-            # 4. Copie récursive du contenu vers le dossier final
             echo "Copie des fichiers..."
             cp -r /root/temp_repo/* /root/srv/
-            
-            # 5. RETRAIT du répertoire temporaire (Étape 9)
-            echo "Nettoyage du dossier temporaire..."
             rm -rf /root/temp_repo
             
-            # 6. Lancement de Docker
+            # --- ÉTAPE 10 : CRÉATION DU FICHIER .ENV ---
+            echo "Configuration des variables d'environnement..."
+            cat <<EOF > /root/srv/.env
+            MYSQL_ROOT_PASSWORD=${{ secrets.DB_PASSWORD }}
+            API_KEY=${{ secrets.API_KEY }}
+            DOMAIN_NAME=${{ secrets.SSH_HOST }}
+            EOF
+            # ------------------------------------------
+
             cd /root/srv
             echo "Mise à jour des conteneurs..."
             docker compose up -d --build
             
-            echo "Déploiement terminé !"
+            echo "Déploiement terminé avec succès !"
