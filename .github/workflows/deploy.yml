@@ -21,4 +21,4 @@ jobs:
           script: |
             cd /root/srv
             git pull origin main
-            # Ici tu pourras ajouter tes commandes docker-compose plus tard
+            echo "Le serveur est à jour !"
