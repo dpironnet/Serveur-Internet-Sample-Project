@@ -1,0 +1,22 @@
+services:
+  otterwiki:
+    image: redimp/otterwiki:latest
+    container_name: otterwiki
+    restart: always
+    networks:
+      - web
+    environment:
+      - OTTERWIKI_SETTINGS=/app/settings.cfg
+    volumes:
+      - ./data:/app/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.otterwiki-router.rule=Host(`wiki.sidylanp.shop`)"
+      - "traefik.http.routers.otterwiki-router.entrypoints=websecure"
+      - "traefik.http.routers.otterwiki-router.tls=true"
+      - "traefik.http.routers.otterwiki-router.tls.certresolver=myresolver"
+      - "traefik.http.services.otterwiki-service.loadbalancer.server.port=80"
+
+networks:
+  web:
+    external: true

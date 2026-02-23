@@ -1,0 +1,23 @@
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:1-alpine
+    container_name: uptime-kuma
+    restart: always
+    environment:
+      - UPTIME_KUMA_ENABLE_EMBEDDED_MARIADB=1
+    volumes:
+      - ./uptime-kuma-data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.uptime-router.rule=Host(`uptime.sidylanp.shop`)"
+      - "traefik.http.routers.uptime-router.entrypoints=websecure"
+      - "traefik.http.routers.uptime-router.tls=true"
+      - "traefik.http.routers.uptime-router.tls.certresolver=myresolver"
+      - "traefik.http.services.uptime-service.loadbalancer.server.port=3001"
+
+networks:
+  web:
+    external: true

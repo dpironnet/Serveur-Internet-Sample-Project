@@ -1,0 +1,4 @@
+tls:
+  certificates:
+    - certFile: /etc/letsencrypt/live/tasklist.sidylanp.shop/fullchain.pem # <--- Le certificat (Public)
+      keyFile: /etc/letsencrypt/live/tasklist.sidylanp.shop/privkey.pem   # <--- La clé (Privée)

@@ -1,0 +1,36 @@
+services:
+  tinyauth:
+    image: thomseddon/traefik-forward-auth:2
+    container_name: tinyauth
+    restart: always
+    environment:
+      - PROVIDER=google
+      - CLIENT_ID=361670021619-uv57ol5ma0a5jq1mn7h7a6l85rauk528.apps.googleusercontent.com
+      - CLIENT_SECRET=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
+      - SECRET=UneCleVraimentTresLongueEtAleatoire987654
+      - WHITELIST=sebastienpironnet5@gmail.com
+      # On désactive AUTH_HOST pour tester la méthode directe
+      # - AUTH_HOST=tinyauth.sidylanp.shop
+      - COOKIE_DOMAIN=sidylanp.shop
+      - URL_PATH=/_oauth
+      - INSECURE_COOKIE=false
+      - LOG_LEVEL=debug
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tinyauth.rule=Host(`tinyauth.sidylanp.shop`) || PathPrefix(`/_oauth`)"
+      - "traefik.http.routers.tinyauth.entrypoints=websecure"
+      - "traefik.http.routers.tinyauth.tls=true"
+      - "traefik.http.routers.tinyauth.tls.certresolver=myresolver"
+      - "traefik.http.routers.tinyauth.middlewares="
+      - "traefik.http.services.tinyauth.loadbalancer.server.port=4181"
+
+      # Middleware pour Uptime
+      - "traefik.http.middlewares.tinyauth.forwardauth.address=http://tinyauth:4181"
+      - "traefik.http.middlewares.tinyauth.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.tinyauth.forwardauth.authResponseHeaders=X-Forwarded-User"
+
+networks:
+  web:
+    external: true

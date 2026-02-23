@@ -1,0 +1,39 @@
+version: "3"
+
+networks:
+  web:
+    external: true
+
+services:
+  fail2ban:
+    image: crazymax/fail2ban:latest
+    container_name: fail2ban
+    network_mode: host
+    privileged: true
+    restart: always
+    volumes:
+      - ./data:/data
+      - ${LOG_PATH_SSH}:/var/log/secure:ro
+      - /etc/fail2ban/jail.d:/etc/fail2ban/jail.d
+
+  fail2ban-ui:
+    image: swissmakers/fail2ban-ui:latest
+    container_name: fail2ban-ui
+    restart: always
+    networks:
+      - web
+    environment:
+      - F2B_DB_SOURCE=${DB_LOCATION}
+    volumes:
+      - ./data:/data
+      - ${LOG_PATH_SSH}:/var/log/secure:ro
+    depends_on:
+      - fail2ban
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.fail2ban-ui.rule=Host(`fail2ban.uptime.${MY_DOMAIN}`)"
+      - "traefik.http.routers.fail2ban-ui.entrypoints=websecure"
+      - "traefik.http.routers.fail2ban-ui.tls.certresolver=myresolver"
+      - "traefik.http.services.fail2ban-ui.loadbalancer.server.port=8080"
+      - "traefik.http.middlewares.f2b-auth.basicauth.users=${TRAEFIK_AUTH}"
+      - "traefik.http.routers.fail2ban-ui.middlewares=f2b-auth"

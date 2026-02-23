@@ -1,0 +1,51 @@
+services:
+  traefik:
+    image: traefik:v3.6
+    container_name: traefik
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/traefik.yml:ro
+      - ./acme.json:/acme.json
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.sidylanp.shop`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.tls.certresolver=myresolver"
+      - "traefik.http.routers.dashboard.middlewares=tinyauth"
+
+  tinyauth:
+    image: ghcr.io/steveiliop56/tinyauth:v4
+    container_name: tinyauth
+    restart: always
+    environment:
+      - APP_URL=https://tinyauth.sidylanp.shop
+      - NEXTAUTH_URL=https://tinyauth.sidylanp.shop
+      # Ajoute ce secret (obligatoire pour NextAuth utilisé dans cette version)
+      - NEXTAUTH_SECRET=CleSuperSecrete2026Dylan
+      - PROVIDERS_GOOGLE_CLIENT_ID=361670021619-uv57ol5ma0a5jq1mn7h7a6l85rauk528.apps.googleusercontent.com
+      - PROVIDERS_GOOGLE_CLIENT_SECRET=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
+      - OAUTH_WHITELISTE=sebastienpironnet5@gmail.com
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tinyauth.rule=Host(`tinyauth.sidylanp.shop`)"
+      - "traefik.http.routers.tinyauth.entrypoints=websecure"
+      - "traefik.http.routers.tinyauth.tls=true"
+      - "traefik.http.routers.tinyauth.tls.certresolver=myresolver"
+      - "traefik.http.services.tinyauth.loadbalancer.server.port=3000"
+      # URL exacte du middleware pour cette version de l'image
+      - "traefik.http.middlewares.tinyauth.forwardauth.address=https://tinyauth.sidylanp.shop/api/auth/traefik"
+      - "traefik.http.middlewares.tinyauth.forwardauth.trustForwardHeader=true"
+    networks:
+      - web
+
+networks:
+  web:
+    external: true

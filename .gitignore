@@ -1,0 +1,10 @@
+# Ignorer tous les fichiers de secrets de tous les sous-dossiers
+**/.env
+
+# Ignorer toutes les données de production
+**/data/
+**/db/
+**/*.sqlite3
+
+# Ignorer les logs
+**/*.log

@@ -1,0 +1,33 @@
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
+    restart: always
+    volumes:
+      - ./data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      
+      # --- ROUTER PRIVÉ (Dashboard) ---
+      # On protège tout SAUF ce qui commence par /status/
+      - "traefik.http.routers.uptime.rule=Host(`uptime.sidylanp.shop`) && !PathPrefix(`/status/`)"
+      - "traefik.http.routers.uptime.entrypoints=websecure"
+      - "traefik.http.routers.uptime.tls=true"
+      - "traefik.http.routers.uptime.tls.certresolver=myresolver"
+      - "traefik.http.routers.uptime.middlewares=tinyauth@docker"
+
+      # --- ROUTER PUBLIC (Pages de Statut) ---
+      # On laisse passer librement les URLs /status/
+      - "traefik.http.routers.uptime-public.rule=Host(`uptime.sidylanp.shop`) && PathPrefix(`/status/`)"
+      - "traefik.http.routers.uptime-public.entrypoints=websecure"
+      - "traefik.http.routers.uptime-public.tls=true"
+      - "traefik.http.routers.uptime-public.tls.certresolver=myresolver"
+      
+      - "traefik.http.services.uptime.loadbalancer.server.port=3001"
+
+networks:
+  web:
+    external: true
