@@ -8,11 +8,8 @@ on:
 
 # --- Étape 4 : Définition du job ---
 jobs:
-  deploy:
-    runs-on: ubuntu-latest  # La machine virtuelle GitHub qui va bosser
+  deploy:                   # C'est le nom de ton Job
+    runs-on: ubuntu-latest  # C'est ton Runner (une machine virtuelle Linux)
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Test de connexion
-        run: echo "GitHub Action est prête à déployer sur la branche main !"
