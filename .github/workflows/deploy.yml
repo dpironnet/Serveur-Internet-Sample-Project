@@ -12,7 +12,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Connexion SSH et Deploiement
+      - name: Connexion SSH et Deploiement Global
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -20,34 +20,58 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd /root
-            
-            # 1. Nettoyage du dossier temporaire
             rm -rf temp_repo
             
-            # 2. Clonage avec Token
-            echo "Clonage du dépôt..."
+            echo "📥 Clonage du dépôt..."
             git clone https://${{ secrets.GH_TOKEN }}@github.com/VOTRE_UTILISATEUR/VOTRE_DEPOT.git temp_repo
             
-            # 3. Préparation du dossier de destination
+            echo "📂 Mise à jour des fichiers sources..."
             mkdir -p /root/srv
-            
-            # 4. Copie récursive
-            echo "Copie des fichiers vers /root/srv..."
             cp -r /root/temp_repo/* /root/srv/
-            
-            # 5. Suppression du dossier de clone
             rm -rf /root/temp_repo
-            
-            # 6. Création du fichier .env
-            echo "Génération du fichier .env..."
-            cat <<EOF > /root/srv/.env
-            MYSQL_ROOT_PASSWORD=${{ secrets.DB_PASSWORD }}
-            # Ajoute tes autres variables ici
-            EOF
-            
-            # 7. LANCEMENT DOCKER (Étape 11)
-            cd /root/srv
-            echo "Lancement des conteneurs (Mode détaché + Force recreate)..."
+
+            # --- 1. TRAEFIK (Le coeur du réseau) ---
+            echo "🔧 Config Traefik..."
+            cd /root/srv/traefik
+            touch acme.json && chmod 600 acme.json
             docker compose up -d --build --force-recreate
-            
-            echo "🚀 Déploiement réussi !"
+
+            # --- 2. FAIL2BAN (Sécurité) ---
+            echo "🔧 Config Fail2ban..."
+            cd /root/srv/fail2ban
+            docker compose up -d --build --force-recreate
+
+            # --- 3. WIKI (OtterWiki) ---
+            echo "🔧 Config Wiki..."
+            cat <<EOF > /root/srv/wiki/.env
+            WIKI_NAME="Mon Wiki"
+            SECRET_KEY=${{ secrets.WIKI_SECRET }}
+            EOF
+            cd /root/srv/wiki
+            docker compose up -d --build --force-recreate
+
+            # --- 4. TASKLIST (App + DB) ---
+            echo "🔧 Config Tasklist..."
+            cat <<EOF > /root/srv/tasklist/.env
+            DB_ROOT_PASSWORD=${{ secrets.DB_PASSWORD }}
+            MYSQL_DATABASE=tasksdb
+            EOF
+            cd /root/srv/tasklist
+            docker compose up -d --build --force-recreate
+
+            # --- 5. UPTIME (Monitoring) ---
+            echo "🔧 Config Uptime..."
+            cd /root/srv/uptime
+            docker compose up -d --build --force-recreate
+
+            # --- 6. TINYAUTH ---
+            echo "🔧 Config TinyAuth..."
+            cd /root/srv/tinyauth
+            docker compose up -d --build --force-recreate
+
+            # --- 7. MONITORING (Secondaire) ---
+            echo "🔧 Config Monitoring..."
+            cd /root/srv/monitoring
+            docker compose up -d --build --force-recreate
+
+            echo "🚀 TOUS LES SERVICES SONT EN LIGNE !"
