@@ -1,8 +1,8 @@
-name: CI-CD Deployment
+name: Deployement Workflow
 
 on:
   push:
-    branches: [ "principal" ]
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -11,5 +11,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Test
-        run: echo "Déploiement prêt !"
+
+      - name: Connexion SSH et Deploiement
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /root/srv
+            git pull origin main
+            echo "Le déploiement est en cours sur le VPS..."
