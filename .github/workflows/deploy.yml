@@ -17,29 +17,31 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }} 
+          key: ${{ secrets.SSH_KEY }}
           script: |
-            # 1. On se place dans root et on nettoie un éventuel ancien dossier de build
             cd /root
+            
+            # 1. Nettoyage de sécurité si un vieux dossier existe
             rm -rf temp_repo
             
-            # 2. On clone le dépôt dans un dossier temporaire
+            # 2. Clonage du répertoire avec le token
             echo "Clonage du dépôt..."
             git clone https://${{ secrets.GH_TOKEN }}@github.com/VOTRE_UTILISATEUR/VOTRE_DEPOT.git temp_repo
             
-            # 3. On crée le dossier de destination s'il n'existe pas
+            # 3. Création du dossier de destination (si absent)
             mkdir -p /root/srv
             
-            # 4. Copie récursive du contenu du dépôt vers /root/srv
-            echo "Copie des fichiers vers /root/srv..."
+            # 4. Copie récursive du contenu vers le dossier final
+            echo "Copie des fichiers..."
             cp -r /root/temp_repo/* /root/srv/
             
-            # 5. On nettoie le dossier temporaire
+            # 5. RETRAIT du répertoire temporaire (Étape 9)
+            echo "Nettoyage du dossier temporaire..."
             rm -rf /root/temp_repo
             
-            # 6. On entre dans le dossier final et on lance Docker
+            # 6. Lancement de Docker
             cd /root/srv
-            echo "Relance des conteneurs Docker..."
+            echo "Mise à jour des conteneurs..."
             docker compose up -d --build
             
-            echo "Déploiement terminé avec succès !"
+            echo "Déploiement terminé !"
