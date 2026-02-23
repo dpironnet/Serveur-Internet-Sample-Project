@@ -19,6 +19,23 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /root/srv
-            git pull origin main
-            echo "Le serveur est à jour !"
+            # On se place dans le dossier parent
+            cd /root
+
+            # Si le dossier n'existe pas, on clone. S'il existe, on entre dedans et on met à jour.
+            if [ ! -d "srv" ]; then
+              echo "Clonage du répertoire..."
+              git clone https://${{ secrets.GH_TOKEN }}@github.com/dpironnet/Serveur-Internet-Sample-Project.git srv
+              cd srv
+            else
+              echo "Le dossier srv existe déjà, mise à jour via pull..."
+              cd srv
+              # On force l'URL avec le token pour éviter les demandes de mot de passe
+              git pull https://${{ secrets.GH_TOKEN }}@github.com/dpironnet/Serveur-Internet-Sample-Project.git main
+            fi
+
+            # Redémarrage des services Docker
+            echo "Relance des conteneurs Docker..."
+            docker compose up -d --build
+            
+            echo "Le déploiement est terminé avec succès !"
