@@ -8,3 +8,4 @@
 
 # Ignorer les logs
 **/*.log
+.env
