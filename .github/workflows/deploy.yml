@@ -1,15 +1,24 @@
 name: Deployement Workflow
 
-# --- Étape 3 : Conditions de lancement ---
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
 
-# --- Étape 4 : Définition du job ---
 jobs:
-  deploy:                   # C'est le nom de ton Job
-    runs-on: ubuntu-latest  # C'est ton Runner (une machine virtuelle Linux)
+  deploy:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Connexion SSH et Deploiement
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /root/srv
+            git pull origin main
+            # Ici tu pourras ajouter tes commandes docker-compose plus tard
