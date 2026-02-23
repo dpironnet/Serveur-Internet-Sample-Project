@@ -17,25 +17,29 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
+          key: ${{ secrets.SSH_KEY }} 
           script: |
-            # On se place dans le dossier parent
+            # 1. On se place dans root et on nettoie un éventuel ancien dossier de build
             cd /root
-
-            # Si le dossier n'existe pas, on clone. S'il existe, on entre dedans et on met à jour.
-            if [ ! -d "srv" ]; then
-              echo "Clonage du répertoire..."
-              git clone https://${{ secrets.GH_TOKEN }}@github.com/dpironnet/Serveur-Internet-Sample-Project.git srv
-              cd srv
-            else
-              echo "Le dossier srv existe déjà, mise à jour via pull..."
-              cd srv
-              # On force l'URL avec le token pour éviter les demandes de mot de passe
-              git pull https://${{ secrets.GH_TOKEN }}@github.com/dpironnet/Serveur-Internet-Sample-Project.git main
-            fi
-
-            # Redémarrage des services Docker
+            rm -rf temp_repo
+            
+            # 2. On clone le dépôt dans un dossier temporaire
+            echo "Clonage du dépôt..."
+            git clone https://${{ secrets.GH_TOKEN }}@github.com/VOTRE_UTILISATEUR/VOTRE_DEPOT.git temp_repo
+            
+            # 3. On crée le dossier de destination s'il n'existe pas
+            mkdir -p /root/srv
+            
+            # 4. Copie récursive du contenu du dépôt vers /root/srv
+            echo "Copie des fichiers vers /root/srv..."
+            cp -r /root/temp_repo/* /root/srv/
+            
+            # 5. On nettoie le dossier temporaire
+            rm -rf /root/temp_repo
+            
+            # 6. On entre dans le dossier final et on lance Docker
+            cd /root/srv
             echo "Relance des conteneurs Docker..."
             docker compose up -d --build
             
-            echo "Le déploiement est terminé avec succès !"
+            echo "Déploiement terminé avec succès !"
